@@ -29,7 +29,7 @@ class ThumbnailsController < ApplicationController
     begin
       @img = URI.open(params[:url]) { |f| Magick::Image.from_blob(f.read())[0] }
       
-    rescue OpenURI::HTTPError => e 
+    rescue OpenURI::HTTPError, SocketError => e 
       return render json: { error: { message: "URL argument isn't accessable" }},
                     status: :unprocessable_entity
     rescue Magick::ImageMagickError => e
@@ -39,7 +39,7 @@ class ThumbnailsController < ApplicationController
   end
 
   def catch_all(exception)
-    render json: { error: { message: 'An error occurred while processing your request?!' }}, status: :internal_server_error
+    render json: { error: { message: 'An error occurred while processing your request' }}, status: :internal_server_error
     logger.error((
       ["Unexpected error in #{self.class} - #{exception.class}: #{exception.message}"] + exception.backtrace
     ).join("\n"))
