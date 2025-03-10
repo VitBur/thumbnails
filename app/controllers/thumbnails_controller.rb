@@ -1,5 +1,5 @@
 class ThumbnailsController < ApplicationController
-  rescue_from StandardError, with: :catch_all
+  rescue_from Exception, with: :catch_all
   before_action :parse_arguments, only: [:thumbnail_create]
 
 
@@ -10,25 +10,24 @@ class ThumbnailsController < ApplicationController
 
     img_with_background.format = 'JPEG'
     binary_data = img_with_background.to_blob
-    send_data binary_data, type: 'image/jpeg', disposition: 'inline'
+    send_data(binary_data, type: 'image/jpeg', disposition: 'inline')
   end
 
   private 
   def parse_arguments
-    unless [:width, :height, :url].all? {|key| params.key? key} 
+    if [:width, :height, :url].any? {|key| not params.key?(key)} 
       return render json: { error: { message: "Required parameter wasn't provided" }}, status: :bad_request
     end
 
     @target_width = params[:width].to_i
     @target_height = params[:height].to_i
-    unless @target_width > 0 && @target_height > 0
+    if @target_width <= 0 || @target_height <= 0
       return render json: { error: { message: "width and height parameters should be positive integers" }}, 
                     status: :unprocessable_entity
     end 
 
     begin
-      @img = URI.open(params[:url]) { |f| Magick::Image.from_blob(f.read())[0] }
-      
+      @img = URI.open(params[:url]) { |f| Magick::Image.from_blob(f.read).first }      
     rescue OpenURI::HTTPError, SocketError => e 
       return render json: { error: { message: "URL argument isn't accessable" }},
                     status: :unprocessable_entity
@@ -43,6 +42,10 @@ class ThumbnailsController < ApplicationController
     logger.error((
       ["Unexpected error in #{self.class} - #{exception.class}: #{exception.message}"] + exception.backtrace
     ).join("\n"))
+
+    if Rails.env.development?
+      raise
+    end
   end
 
 end

@@ -23,44 +23,48 @@ RSpec.describe 'Thumbnails', :image_genarator, type: :request do
       end
     end
 
-    it 'returns 400 without height param' do
-      get thumbnail_path, params: {width: 100, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
-      expect(response).to have_http_status(:bad_request)
+    context 'returns 400 with missing parameter' do
+      example 'height' do
+        get thumbnail_path, params: {width: 100, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      example 'width' do
+        get thumbnail_path, params: {height: 100, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      example 'url' do
+        get thumbnail_path, params: {height: 100, width: 100 }
+        expect(response).to have_http_status(:bad_request)
+      end
     end
 
-    it 'returns 400 without width param' do
-      get thumbnail_path, params: {height: 100, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
-      expect(response).to have_http_status(:bad_request)
-    end
+    context 'returns 422 when parameter is invalid -' do
+      example 'height is negative' do
+        get thumbnail_path, params: {width: 100, height: -12, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
 
-    it 'returns 400 without url param' do
-      get thumbnail_path, params: {height: 100, width: 100 }
-      expect(response).to have_http_status(:bad_request)
-    end
+      example 'width is zero' do
+        get thumbnail_path, params: {width: 0, height: 112, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
 
-    it 'returns 422 if height is negative' do
-      get thumbnail_path, params: {width: 100, height: -12, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
+      example 'host URL not accessible' do
+        get thumbnail_path, params: {width: 123, height: 112, url: 'https://www.not-existing.url.cccc'}
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
 
-    it 'returns 422 if width is zero' do
-      get thumbnail_path, params: {width: 0, height: 112, url: 'https://www.wikipedia.org/portal/wikipedia.org/assets/img/Wikipedia-logo-v2.png'}
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
+      example 'image not found' do
+        get thumbnail_path, params: {width: 123, height: 112, url: 'https://www.google.com/not-existing'}
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
 
-    it 'returns 422 if host URL not accessible' do
-      get thumbnail_path, params: {width: 123, height: 112, url: 'https://www.not-existing.url.cccc'}
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it 'returns 422 if image not found' do
-      get thumbnail_path, params: {width: 123, height: 112, url: 'https://www.google.com/not-existing'}
-      expect(response).to have_http_status(:unprocessable_entity)
-    end
-
-    it 'returns 422 if not an image' do
-      get thumbnail_path, params: {width: 123, height: 112, url: 'https://www.google.com'}
-      expect(response).to have_http_status(:unprocessable_entity)
+      example 'not an image' do
+        get thumbnail_path, params: {width: 123, height: 112, url: 'https://www.google.com'}
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
     end
 
     context '40x70 thumbnail with white box 80x60 png image parameter' do
@@ -102,7 +106,7 @@ RSpec.describe 'Thumbnails', :image_genarator, type: :request do
       end
     end
 
-    it 'generates an image with low PSNR when request same width and height as original' do
+    it 'generates an image with high PSNR when request same width and height as original' do
       get thumbnail_path, params: {'width': 640, 'height': 427, 'url': 'https://res.cloudinary.com/demo/image/upload/docs/camera-640.jpg'}
       result = Magick::Image.from_blob(response.body).first
       original_image = URI.open('https://res.cloudinary.com/demo/image/upload/docs/camera-640.jpg') { |f|
@@ -112,7 +116,7 @@ RSpec.describe 'Thumbnails', :image_genarator, type: :request do
       expect(psnr(result, original_image)).to be > 40
     end
     
-    context 'when we consider cloudinary output for a similar task as original, we get low PSNR for thumbnail' do
+    context 'when we consider cloudinary output for a similar task as original, we get high PSNR for thumbnail' do
       example 'where black frame has to be created in both height and width' do
         get thumbnail_path, params: {'width': 525, 'height': 400, 'url': 'https://res.cloudinary.com/demo/image/upload/face_left.png'}
         result = Magick::Image.from_blob(response.body).first
