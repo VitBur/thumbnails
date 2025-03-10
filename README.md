@@ -1,24 +1,14 @@
-# README
+# Cloudinary Backend Developer Assignment
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Install all the gems specified in the Gemfile by: `bundle install`.
 
-Things you may want to cover:
+Runs The server by `rails s -p 4000` command.
 
-* Ruby version
+Example of thumbnail request: 
+<br /> 
+http://localhost:4000/thumbnail?url=https://i.sstatic.net/cEdDG.png&width=130&height=140
 
-* System dependencies
+Runs The test by `rspec` command.
 
-* Configuration
 
-* Database creation
 
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
