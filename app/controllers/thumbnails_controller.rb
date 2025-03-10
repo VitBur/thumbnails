@@ -15,7 +15,7 @@ class ThumbnailsController < ApplicationController
 
   private 
   def parse_arguments
-    if [:width, :height, :url].any? {|key| not params.key?(key)} 
+    if [:width, :height, :url].any? {|key| !params.key?(key)} 
       return render json: { error: { message: "Required parameter wasn't provided" }}, status: :bad_request
     end
 

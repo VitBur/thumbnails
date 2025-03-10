@@ -1,10 +1,3 @@
-module Enumerable
-  def divide_all_by(divisor)
-    self.map { |element| element / divisor.to_f }
-  end 
-end
-
-
 module ImageCompareHelpers
   def mean_squared_difference(img1, img2)
     sum_squared_dist = 0
@@ -28,7 +21,7 @@ module ImageCompareHelpers
   end
 
   def divide_all_elements(num_array, divisor)
-    num_array.map{ |element| element / divisor.to_f }
+    num_array.map { |element| element / divisor.to_f }
   end
 end 
     
